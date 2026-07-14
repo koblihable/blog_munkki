@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Users{% endblock %}
+
+{% block content %}
+
+    <header class="masthead" style="background-image: url('../static/assets/img/home-bg.jpg')">
+        <div class="container position-relative px-4 px-lg-5">
+            <div class="row gx-4 gx-lg-5 justify-content-center">
+                <div class="col-md-10 col-lg-8 col-xl-7">
+                    <div class="site-heading">
+                        <span class="subheading"><h2>Active Users</h2></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container px-4 px-lg-5">
+        <div class="row gx-4 gx-lg-5 justify-content-center">
+
+                    <table>
+                        <tr>
+                            <th></th>
+                            <th>First Name</th>
+                            <th>Last Name</th>
+                            <th>Email</th>
+                            <th>Is Admin</th>
+                            <th>Switch Admin</th>
+                            <th></th>
+                        </tr>
+                        {% for user in users %}
+                        <tr>
+                            <td>
+                                <div class="user-info">
+                                    {% if user.profile_pic %}
+                                    <img src="{{ url_for('static', filename='usr_images/') }}{{ user.profile_pic }}" alt="" class="be-ava-comment">
+                                    {% else %}
+                                    <div class="user-info">
+                                        <i class="fa-solid fa-user-secret"></i>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>{{ user.first_name }}</td>
+                            <td>{{ user.last_name }}</td>
+                            <td>{{ user.email }}</td>
+                            {% if user.is_admin %}
+                                <td>Yes</td>
+                            {% else %}
+                                <td>No</td>
+                            {% endif %}
+
+                            {% if user == current_user %}
+                                <td>Logged in</td>
+                            {% elif user.blog_posts | length > 0 %}
+                                <td><a class="btn btn-switch text-uppercase" href="{{ url_for('switch_admin', user_id=user.id) }}">Switch</a></td>
+                                <td>Has posts</td>
+                            {% else %}
+                                <td><a class="btn btn-switch text-uppercase" href="{{ url_for('switch_admin', user_id=user.id) }}">Switch</a></td>
+                                <td><a class="btn btn-delete text-uppercase" href="{{ url_for('delete_user', user_id=user.id) }}">Delete</a></td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </table>
+
+        </div>
+    </div>
+    <br/>
+
+{% endblock %}
+

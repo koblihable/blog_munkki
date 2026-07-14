@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% from 'bootstrap5/form.html' import render_form %}
+
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+
+    <header class="masthead" style="background-image: url('../static/assets/img/home-bg.jpg')">
+        <div class="container position-relative px-4 px-lg-5">
+            <div class="row gx-4 gx-lg-5 justify-content-center">
+                <div class="col-md-10 col-lg-8 col-xl-7">
+                    <div class="site-heading">
+                        <span class="subheading"><h2>User settings</h2></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container px-4 px-lg-5">
+        <div class="row gx-4 gx-lg-5 justify-content-center">
+
+<div class="container">
+    <div class="view-account">
+        <section class="module">
+            <div class="module-inner">
+                <div class="side-bar">
+                    {% if user.profile_pic %}
+                    <div class="user-info">
+                        <img src="{{ url_for('static', filename='usr_images/') }}{{ user.profile_pic }}" alt="" class="be-ava-comment">
+                    </div>
+                    {% else %}
+                    <div class="user-info">
+                        <i class="fa-solid fa-user-secret"></i>
+                    </div>
+                    {% endif %}
+            		<nav class="side-menu">
+        				<ul class="nav">
+        					<li><a href="{{ url_for('user_profile', user_id=user.id) }}"><span class="fa fa-user"></span> Profile</a></li>
+        					<li class="active"><a href="{{ url_for('user_settings', user_id=user.id) }}"><span class="fa fa-cog"></span> Settings</a></li>
+        					<li><a href="{{ url_for('user_comments', user_id=user.id) }}"><span class="fa-solid fa-comments"></span> My Comments</a></li>
+        					<li><a href="{{ url_for('user_posts', user_id=user.id) }}"><span class="fa-solid fa-file-pen"></span> My Posts</a></li>
+        				</ul>
+        			</nav>
+                </div>
+
+                <div class="content-panel">
+                    <h2 class="title">Profile</h2>
+                    <h3 class="fieldset-title">Personal Info</h3>
+                        <div class="col-md-10 col-lg-8 col-xl-7">
+                        {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                        {% for message in messages %}
+                        <p class="flash">{{ message }}</p>
+                        {% endfor %}
+                        {% endif %}
+                        {% endwith %}
+
+                        {{ render_form(user_form, novalidate=True) }}
+                        </div>
+                    </br></br>
+                    <h3 class="fieldset-title">Profile Picture</h3>
+
+					<div class="col-xxl-8">
+						<div class="bg-secondary-soft px-4 py-5 rounded">
+							<div class="row">
+								<h4 class="mb-4 mt-0">Your Photo</h4>
+								<div class="text-center">
+									<!-- Image upload -->
+									<div class="square position-relative display-2 mb-3">
+										<i class="fas fa-fw fa-user position-absolute top-50 start-50 translate-middle text-secondary"></i>
+                                        {% if user.profile_pic %}
+                                            <div class="user-info">
+                                            <img src="{{ url_for('static', filename='usr_images/') }}{{ user.profile_pic }}" alt="" class="be-ava-comment">
+                                            </div>
+                                        {% else %}
+                                            <div class="user-info">
+                                            <i class="fa-solid fa-user-secret"></i>
+                                        </div>
+                                        {% endif %}
+									</div>
+
+									<a onclick="displayPictureUpdate()" class="btn btn-switch">Upload</a>
+                                    <button type="button" class="btn btn-delete">Remove</button>
+                                    <br/><br/>
+                                    <div id="pictureUpdate" style="display: none;">
+
+                                        <form class="horizontalLayout" method="POST">
+                                            {{ picture_form.hidden_tag() }}
+                                            {{ picture_form.image }}
+                                            {{ picture_form.update(class="btn btn-switch", value="picture_update") }}
+                                            <!--button type="submit" name="picture_form_submit" value="picture_update">Upload Picture</button-->
+                                        </form>
+
+                                    </div>
+                                    <br/><br/>
+
+
+
+
+
+
+
+									<!-- Content -->
+
+								</div>
+							</div>
+						</div>
+					</div>
+
+
+
+
+
+
+
+
+                    </br></br>
+                    <h3 class="fieldset-title">Password</h3>
+                        <div class="col-md-10 col-lg-8 col-xl-7">
+                        {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                        {% for message in messages %}
+                        <p class="flash">{{ message }}</p>
+                        {% endfor %}
+                        {% endif %}
+                        {% endwith %}
+
+                        {{ render_form(user_form, novalidate=True) }}
+                        </div>
+                </div>
+            </div>>
+        </section>
+    </div>
+</div>
+            {% endblock %}

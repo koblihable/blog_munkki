@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+
+    <header class="masthead" style="background-image: url('../static/assets/img/home-bg.jpg')">
+        <div class="container position-relative px-4 px-lg-5">
+            <div class="row gx-4 gx-lg-5 justify-content-center">
+                <div class="col-md-10 col-lg-8 col-xl-7">
+                    <div class="site-heading">
+                        <span class="subheading"><h2>User detail</h2></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container px-4 px-lg-5">
+        <div class="row gx-4 gx-lg-5 justify-content-center">
+
+<div class="container">
+    <div class="view-account">
+        <section class="module">
+            <div class="module-inner">
+                <div class="side-bar">
+                    {% if user.profile_pic %}
+                    <div class="user-info">
+                        <img src="{{ url_for('static', filename='usr_images/') }}{{ user.profile_pic }}" alt="" class="be-ava-comment">
+                    </div>
+                    {% else %}
+                    <div class="user-info">
+                        <i class="fa-solid fa-user-secret"></i>
+                    </div>
+                    {% endif %}
+            		<nav class="side-menu">
+        				<ul class="nav">
+        					<li class="active"><a href="{{ url_for('user_profile', user_id=user.id) }}"><span class="fa fa-user"></span> Profile</a></li>
+        					<li><a href="{{ url_for('user_settings', user_id=user.id) }}"><span class="fa fa-cog"></span> Settings</a></li>
+        					<li><a href="{{ url_for('user_comments', user_id=user.id) }}"><span class="fa-solid fa-comments"></span> My Comments</a></li>
+        					<li><a href="{{ url_for('user_posts', user_id=user.id) }}"><span class="fa-solid fa-file-pen"></span> My Posts</a></li>
+        				</ul>
+        			</nav>
+                </div>
+                <div class="content-panel">
+                    <h2 class="title">Profile</h2>
+
+                    <table class="table-borderless">
+                        <tr>
+                            <th class="title">First Name</th>
+                            <td class="data">{{user.first_name | title}}</td>
+                        </tr>
+                        <tr>
+                            <th class="title">Last Name</th>
+                            <td class="data">{{user.last_name | title}}</td>
+                        </tr>
+                        <tr>
+                            <th class="title">Email</th>
+                            <td class="data">{{user.email}}</td>
+                        </tr>
+                        <tr>
+                            <th class="title">Last Logged In</th>
+                            <td class="data">{{user.last_logged_in | datetimeformat}}</td>
+                        </tr>
+                        <tr>
+                            <th class="title">Admin Access</th>
+                            {% if user.is_admin %}
+                                <td class="data">yes</td>
+                            {% else %}
+                                <td class="data">no</td>
+                            {% endif %}
+                        </tr>
+                        <tr>
+                            <th class="title">Date Created</th>
+                            <td class="data">{{ user.date_created | datetimeformat }}</td>
+                        </tr>
+                    </table>
+
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+            {% endblock %}
