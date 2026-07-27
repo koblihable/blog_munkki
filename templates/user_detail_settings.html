@@ -46,6 +46,8 @@
 
                 <div class="content-panel">
                     <h2 class="title">Profile</h2>
+
+
                     <h3 class="fieldset-title">Personal Info</h3>
                         <div class="col-md-10 col-lg-8 col-xl-7">
                         {% with messages = get_flashed_messages() %}
@@ -59,6 +61,8 @@
                         {{ render_form(user_form, novalidate=True) }}
                         </div>
                     </br></br>
+
+
                     <h3 class="fieldset-title">Profile Picture</h3>
 
 					<div class="col-xxl-8">
@@ -66,12 +70,13 @@
 							<div class="row">
 								<h4 class="mb-4 mt-0">Your Photo</h4>
 								<div class="text-center">
+
 									<!-- Image upload -->
 									<div class="square position-relative display-2 mb-3">
-										<i class="fas fa-fw fa-user position-absolute top-50 start-50 translate-middle text-secondary"></i>
+										<i class="fas fa-fw position-absolute top-50 start-50 translate-middle text-secondary"></i>
                                         {% if user.profile_pic %}
                                             <div class="user-info">
-                                            <img src="{{ url_for('static', filename='usr_images/') }}{{ user.profile_pic }}" alt="" class="be-ava-comment">
+                                                <img src="{{ url_for('static', filename='usr_images/') }}{{ user.profile_pic }}" alt="" class="be-ava-comment">
                                             </div>
                                         {% else %}
                                             <div class="user-info">
@@ -84,52 +89,31 @@
                                     <button type="button" class="btn btn-delete">Remove</button>
                                     <br/><br/>
                                     <div id="pictureUpdate" style="display: none;">
-
-                                        <form class="horizontalLayout" method="POST">
-                                            {{ picture_form.hidden_tag() }}
-                                            {{ picture_form.image }}
-                                            {{ picture_form.update(class="btn btn-switch", value="picture_update") }}
-                                            <!--button type="submit" name="picture_form_submit" value="picture_update">Upload Picture</button-->
-                                        </form>
-
+                                        {{ render_form(picture_form, novalidate=True) }}
+                                        {% if user.profile_pic %}
+                                            <div class="user-info">
+                                                <img src="{{ url_for('static', filename='usr_images/') }}{{ user.profile_pic }}" alt="" class="be-ava-comment">
+                                            </div>
+                                        {% else %}
+                                            <div class="user-info">
+                                            <i class="fa-solid fa-user-secret"></i>
+                                        </div>
+                                        {% endif %}
                                     </div>
                                     <br/><br/>
-
-
-
-
-
-
-
-									<!-- Content -->
-
-								</div>
+    							</div>
 							</div>
 						</div>
 					</div>
 
+                    <br/><br/>
 
-
-
-
-
-
-
-                    </br></br>
                     <h3 class="fieldset-title">Password</h3>
-                        <div class="col-md-10 col-lg-8 col-xl-7">
-                        {% with messages = get_flashed_messages() %}
-                        {% if messages %}
-                        {% for message in messages %}
-                        <p class="flash">{{ message }}</p>
-                        {% endfor %}
-                        {% endif %}
-                        {% endwith %}
 
-                        {{ render_form(user_form, novalidate=True) }}
-                        </div>
+                    {{ render_form(password_form, novalidate=True) }}
+
                 </div>
-            </div>>
+            </div>
         </section>
     </div>
 </div>

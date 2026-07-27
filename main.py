@@ -1,15 +1,16 @@
+from forms import *
+
+
 import smtplib
-from flask import Flask, render_template, request, redirect, url_for, flash, abort
+from flask import Flask, render_template, redirect, url_for, flash, abort
 from functools import wraps
 from flask_bootstrap import Bootstrap5
 from flask_sqlalchemy import SQLAlchemy
-from flask_wtf import FlaskForm, csrf
-from flask_ckeditor import CKEditor, CKEditorField
+
+from flask_ckeditor import CKEditor
 from flask_login import UserMixin, LoginManager, login_user, current_user, logout_user, login_required
 from flask_migrate import Migrate
-from wtforms import StringField, FormField
-from wtforms.fields.simple import SubmitField, TextAreaField, FileField
-from wtforms.validators import DataRequired, Regexp, Length
+
 from sqlalchemy import Integer, String, Text, ForeignKey, Boolean, DateTime
 from typing import List
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -40,7 +41,7 @@ db = SQLAlchemy(model_class=Base)
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
 app.config['SQLALCHEMY_DATABASE_URI'] = ('postgresql://postgres:Jester10qrz@localhost:5432/posts_db')
-app.config['UPLOAD_FOLDER'] = 'static/usr_images'
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
 db.init_app(app)
 migrate = Migrate(app, db)
 
@@ -111,72 +112,6 @@ with app.app_context():
     db.create_all()
 
 
-### forms ###
-# create blog post
-class BlogForm(FlaskForm):
-    title = StringField(label='Title*', validators=[DataRequired()])
-    subtitle = StringField(label='Subtitle*', validators=[DataRequired()])
-    body = CKEditorField(label='Text*', validators=[DataRequired()])
-    img_url = StringField(label='Image', default='./static/assets/img/rafa.jpg')
-    submit = SubmitField(label='Post')
-
-# create/ update a user
-class UserForm(FlaskForm):
-    email_error = 'Please enter a valid email address'
-    password_error = 'Password must be at least 8 characters long'
-    first_name = StringField(label='First Name*', validators=[DataRequired()])
-    last_name = StringField(label='Last Name*', validators=[DataRequired()])
-    profile_pic = FileField(label='Profile Picture')
-    email = StringField(
-        label='Email*',
-        validators=[DataRequired(), Regexp(regex=r".+@.+\..+", message=email_error)]
-    )
-    password = StringField(
-        label='Password*',
-        validators=[DataRequired(), Length(min=8, message=password_error)],
-    )
-    submit = SubmitField(label='Submit')
-
-class UpdateUserForm(FlaskForm):
-    email_error = 'Please enter a valid email address'
-    first_name = StringField(label='First Name', validators=[DataRequired()])
-    last_name = StringField(label='Last Name', validators=[DataRequired()])
-    email = StringField(
-        label='Email',
-        validators=[DataRequired(), Regexp(regex=r".+@.+\..+", message=email_error)]
-    )
-    submit = SubmitField(label='Update')
-
-# user login
-class LoginForm(FlaskForm):
-    email = StringField(label='Email*', validators=[DataRequired()])
-    password = StringField(label='Password*', validators=[DataRequired()])
-    submit = SubmitField(label='Submit')
-
-# message form
-class ContactForm(FlaskForm):
-    name = StringField(label='Name*', validators=[DataRequired()])
-    email = StringField(label='Email*', validators=[DataRequired()])
-    phone = StringField(label='Phone')
-    message = TextAreaField(label='Message*', validators=[DataRequired()])
-    submit = SubmitField(label='Submit')
-
-# comment form
-class CommentForm(FlaskForm):
-    comment = TextAreaField(label='Comment', validators=[DataRequired()])
-    submit = SubmitField(label='Submit')
-
-# picture form
-class PictureForm(FlaskForm):
-    image = FileField(label='')
-    update = SubmitField(label='submit')
-
-class PasswordForm(FlaskForm):
-    old_password = StringField(label='Old Password*', validators=[DataRequired()])
-    new_password = StringField(label='New Password*', validators=[DataRequired()])
-    check_password = StringField(label='Password Check*', validators=[DataRequired()])
-    update = SubmitField(label='submit')
-
 
 
 
@@ -223,10 +158,10 @@ def create_blog():
     create_form = BlogForm()
     if create_form.validate_on_submit():
         blog_post = BlogPost(
-            title=request.form.get('title'),
-            subtitle=request.form.get('subtitle'),
-            body=request.form.get('body'),
-            img_url=request.form.get('img_url'),
+            title=create_form.title.data,
+            subtitle=create_form.subtitle.data,
+            body=create_form.body.data,
+            img_url=create_form.img_url.data,
             date_created = dt.datetime.now(),
             date_updated=dt.datetime.now(),
             author_id = current_user.id
@@ -241,16 +176,13 @@ def create_blog():
 @admin_required
 def edit_post(post_id):
     post = db.get_or_404(BlogPost, post_id)
-    edit_form = BlogForm(
-        title = post.title,
-        subtitle = post.subtitle,
-        body = post.body
-    )
+    edit_form = BlogForm(obj=post)
+
     if edit_form.validate_on_submit():
         blog_to_update = db.get_or_404(BlogPost, post_id)
-        blog_to_update.title = request.form.get('title')
-        blog_to_update.subtitle = request.form.get('subtitle')
-        blog_to_update.body = request.form.get('body')
+        blog_to_update.title = edit_form.title.data
+        blog_to_update.subtitle = edit_form.subtitle.data
+        blog_to_update.body = edit_form.body.data
         blog_to_update.date_updated = dt.date.today()
         db.session.commit()
         return redirect(url_for('blog_post_detail', post_id=post_id))
@@ -275,10 +207,10 @@ def about_author():
 def contact():
     contact_form = ContactForm()
     if contact_form.validate_on_submit():
-        name = request.form.get('name')
-        user_email = request.form.get('email')
-        phone = request.form.get('phone')
-        message = request.form.get('message')
+        name = contact_form.name.data
+        user_email = contact_form.email.data
+        phone = contact_form.phone.data
+        message = contact_form.message.data
         email_message = f"Subject:New Message\n\nName: {name}\nEmail: {user_email}\nPhone: {phone}\nMessage:{message}"
         with smtplib.SMTP("smtp.gmail.com") as connection:
             connection.starttls()
@@ -295,7 +227,7 @@ def blog_post_detail(post_id):
     comment_form = CommentForm()
     if comment_form.validate_on_submit():
         comment = Comment(
-            text = request.form.get('comment'),
+            text = comment_form.comment.data,
             author_id = current_user.id,
             comment_author = current_user,
             post_id = post_id,
@@ -314,27 +246,27 @@ def blog_post_detail(post_id):
 def register_user():
     register_form = UserForm()
     if register_form.validate_on_submit():
-        email = request.form.get('email').lower()
+        email = register_form.email.data.lower()
         # check if user already exists
         user = db.session.execute(db.select(User).where(User.email==email)).scalar()
         if user:
             flash('User with this email address already exists. Please log in instead.', 'danger')
             return redirect(url_for('login'))
         password = generate_password_hash(
-            request.form.get('password'),
+            register_form.password.data,
             method='pbkdf2:sha256',
             salt_length=8
         )
-        profile_pic_file = request.files.get('profile_pic')
+        profile_pic_file = register_form.profile_pic.data
         if profile_pic_file:
             profile_pic = secure_filename(profile_pic_file.filename)
             profile_pic_name = f'{uuid.uuid1()}_{profile_pic}'
             profile_pic_file.save(os.path.join(app.config['UPLOAD_FOLDER'], profile_pic_name))
 
         new_user = User(
-            first_name=request.form.get('first_name'),
-            last_name=request.form.get('last_name'),
-            email=request.form.get('email').lower(),
+            first_name=register_form.first_name.data,
+            last_name=register_form.last_name.data,
+            email=email,
             password=password,
             profile_pic=profile_pic_name if profile_pic_file else None,
             date_created=dt.datetime.now(),
@@ -352,8 +284,8 @@ def register_user():
 def login():
     login_form = LoginForm()
     if login_form.validate_on_submit():
-        email = request.form.get('email')
-        password = request.form.get('password')
+        email = login_form.email.data
+        password = login_form.password.data
         user = db.session.execute(db.select(User).where(User.email==email)).scalar()
         if not user:
             flash('A user with this email address does not exist. Please register instead.', 'danger')
@@ -413,40 +345,53 @@ def user_profile(user_id):
 @app.route('/usr_settings/<int:user_id>', methods=['GET', 'POST'])
 def user_settings(user_id):
     user = db.get_or_404(User, user_id)
-    picture_form = PictureForm(
-        image=user.profile_pic
-    )
-    user_form = UpdateUserForm(
-        first_name=user.first_name,
-        last_name=user.last_name,
-        email=user.email,
-    )
-    if user_form.validate_on_submit():
-        user.first_name=request.form.get('first_name')
-        user.last_name=request.form.get('last_name'),
-        user.email=request.form.get('email').lower(),
+    picture_form = PictureForm()
+
+    user_form = UpdateUserForm(obj=user)
+    password_form = ChangePasswordForm()
+
+    #TODO move into separate functions
+    if user_form.submit.data and user_form.validate():
+        user.first_name=user_form.first_name.data
+        user.last_name=user_form.last_name.data
+        user.email=user_form.email.data.lower()
         user.date_updated = dt.datetime.now()
         db.session.commit()
-        return redirect(
-            url_for('user_settings', user=user, user_id=user.id, user_form=user_form, picture_form=picture_form)
-        )
+        return redirect(url_for('user_settings', user_id=user.id))
 
-    if picture_form.update.data and picture_form.validate():
-        print('true')
-        profile_pic_file = request.files.get('profile_pic')
-        print(profile_pic_file)
+    elif picture_form.update.data and picture_form.validate():
+
+        profile_pic_file = picture_form.image.data
         if profile_pic_file:
             profile_pic = secure_filename(profile_pic_file.filename)
             profile_pic_name = f'{uuid.uuid1()}_{profile_pic}'
             profile_pic_file.save(os.path.join(app.config['UPLOAD_FOLDER'], profile_pic_name))
             user.profile_pic = profile_pic_name
             db.session.commit()
-            return redirect(
-                url_for('user_settings', user=user, user_id=user.id, user_form=user_form, picture_form=picture_form)
+            return redirect(url_for('user_settings', user_id=user.id))
+
+    elif password_form.update.data and password_form.validate():
+        old_password = password_form.old_password.data
+        current_password = user.password
+        if not check_password_hash(current_password, old_password):
+            flash('Password is incorrect. Try again.', 'danger')
+            return redirect(url_for('user_settings', user_id=user.id))
+        else:
+            password = generate_password_hash(
+                password_form.new_password.data,
+                method='pbkdf2:sha256',
+                salt_length=8
             )
+            user.password = password
+            db.session.commit()
+            return redirect(url_for('user_settings', user_id=user.id))
 
     return render_template(
-        'user_detail_settings.html', user=user, user_form=user_form, picture_form=picture_form
+        'user_detail_settings.html',
+        user=user,
+        user_form=user_form,
+        picture_form=picture_form,
+        password_form=password_form
     )
 
 @app.route('/usr_comments/<int:user_id>')
@@ -458,9 +403,6 @@ def user_comments(user_id):
 def user_posts(user_id):
     user = db.get_or_404(User, user_id)
     return render_template('user_detail_posts.html', user=user)
-
-# TODO reset password from page settings
-# login required old password, new password
 
 
 if __name__ == '__main__':
