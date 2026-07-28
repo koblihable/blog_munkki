@@ -1,5 +1,6 @@
 from forms import *
 from models import *
+from extensions import db
 
 
 import smtplib
@@ -32,6 +33,17 @@ APP_PASSWORD=os.environ.get('PASSWORD')
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
 
+#TODO
+'''def create_app():
+    app = Flask(__name__)
+
+    db.init_app(app)
+    login_manager.init_app(app)
+    ckeditor.init_app(app)
+
+    return app'''
+
+
 
 # update config
 app = Flask(__name__)
@@ -39,9 +51,6 @@ app.config['SECRET_KEY'] = SECRET_KEY
 app.config['SQLALCHEMY_DATABASE_URI'] = ('postgresql://postgres:Jester10qrz@localhost:5432/posts_db')
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 db.init_app(app)
-
-with app.app_context():
-    db.create_all()
 
 migrate = Migrate(app, db)
 
@@ -352,4 +361,7 @@ def user_posts(user_id):
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+
+
 
