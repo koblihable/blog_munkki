@@ -1,26 +1,25 @@
 from forms import *
+from models import *
 
 
 import smtplib
 from flask import Flask, render_template, redirect, url_for, flash, abort
 from functools import wraps
 from flask_bootstrap import Bootstrap5
-from flask_sqlalchemy import SQLAlchemy
+
 
 from flask_ckeditor import CKEditor
-from flask_login import UserMixin, LoginManager, login_user, current_user, logout_user, login_required
+from flask_login import LoginManager, login_user, current_user, logout_user, login_required
 from flask_migrate import Migrate
 
-from sqlalchemy import Integer, String, Text, ForeignKey, Boolean, DateTime
-from typing import List
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+
+
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import os
 import datetime as dt
 import uuid as uuid
 
-# TODO user profile section
 # TODO user activation
 # TODO forgotten password
 # TODO password obfuscation on create and update
@@ -32,10 +31,7 @@ APP_PASSWORD=os.environ.get('PASSWORD')
 # secret key for create form
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
-# database initialization
-class Base(DeclarativeBase):
-    pass
-db = SQLAlchemy(model_class=Base)
+
 
 # update config
 app = Flask(__name__)
@@ -43,6 +39,10 @@ app.config['SECRET_KEY'] = SECRET_KEY
 app.config['SQLALCHEMY_DATABASE_URI'] = ('postgresql://postgres:Jester10qrz@localhost:5432/posts_db')
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 db.init_app(app)
+
+with app.app_context():
+    db.create_all()
+
 migrate = Migrate(app, db)
 
 login_manager = LoginManager()
@@ -56,60 +56,7 @@ ckeditor = CKEditor(app)
 bootstrap = Bootstrap5(app)
 
 
-### models ###
 
-class User(UserMixin, db.Model):
-    id:Mapped[int] = mapped_column(Integer, primary_key=True)
-    first_name:Mapped[str] = mapped_column(String(255), nullable=False, default='none')
-    last_name:Mapped[str] = mapped_column(String(255), nullable=False, default='none')
-    email:Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
-    password:Mapped[str] = mapped_column(String(100), nullable=False)
-    is_admin:Mapped[bool] = mapped_column(Boolean(), nullable=False, default=False)
-    profile_pic:Mapped[str] = mapped_column(String(), nullable=True, default=None)
-    date_created:Mapped[dt.datetime] = mapped_column(DateTime(), nullable=False, default=dt.datetime.now())
-    date_updated: Mapped[dt.datetime] = mapped_column(DateTime(), nullable=False, default=dt.datetime.now())
-    last_logged_in:Mapped[dt.datetime] = mapped_column(DateTime(), nullable=True, default=None)
-
-    # parent relationships
-    posts: Mapped[List['BlogPost']] = relationship('BlogPost', back_populates='author')
-    comments:Mapped[List['Comment']] = relationship('Comment', back_populates='comment_author')
-
-    @property
-    def has_posts(self):
-        return len(self.posts) > 0
-
-
-class BlogPost(db.Model):
-    id:Mapped[int] = mapped_column(Integer, primary_key=True)
-    title:Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
-    subtitle:Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
-    body:Mapped[str] = mapped_column(Text, nullable=False, unique=True)
-    date_created:Mapped[dt.datetime] = mapped_column(DateTime(), nullable=False, default=dt.datetime.now())
-    date_updated: Mapped[dt.datetime] = mapped_column(DateTime(), nullable=False, default=dt.datetime.now())
-    img_url:Mapped[str] = mapped_column(String(255))
-
-    # child relationship
-    author_id:Mapped[int] = mapped_column(Integer, ForeignKey(User.id), nullable=False)
-    author:Mapped[str] = relationship('User', back_populates='posts')
-
-    # parent relationship
-    post_comments:Mapped[List['Comment']] = relationship('Comment', back_populates='parent_post')
-
-
-class Comment(db.Model):
-    id:Mapped[int] = mapped_column(Integer, primary_key=True)
-    date_created:Mapped[dt.datetime] = mapped_column(DateTime(), nullable=False, default=dt.datetime.now())
-    date_updated: Mapped[dt.datetime] = mapped_column(DateTime(), nullable=False, default=dt.datetime.now())
-    text: Mapped[str] = mapped_column(String(255), nullable=False)
-
-    # child relationships
-    author_id:Mapped[int] = mapped_column(Integer, ForeignKey(User.id), nullable=False)
-    comment_author:Mapped[str] = relationship('User', back_populates='comments')
-    post_id:Mapped[int] = mapped_column(Integer, ForeignKey(BlogPost.id), nullable=False)
-    parent_post = relationship('BlogPost', back_populates='post_comments')
-
-with app.app_context():
-    db.create_all()
 
 
 
@@ -259,8 +206,7 @@ def register_user():
         )
         profile_pic_file = register_form.profile_pic.data
         if profile_pic_file:
-            profile_pic = secure_filename(profile_pic_file.filename)
-            profile_pic_name = f'{uuid.uuid1()}_{profile_pic}'
+            profile_pic_name = f"{uuid.uuid4()}_{secure_filename(profile_pic_file.filename)}"
             profile_pic_file.save(os.path.join(app.config['UPLOAD_FOLDER'], profile_pic_name))
 
         new_user = User(
@@ -363,8 +309,7 @@ def user_settings(user_id):
 
         profile_pic_file = picture_form.image.data
         if profile_pic_file:
-            profile_pic = secure_filename(profile_pic_file.filename)
-            profile_pic_name = f'{uuid.uuid1()}_{profile_pic}'
+            profile_pic_name = f"{uuid.uuid4()}_{secure_filename(profile_pic_file.filename)}"
             profile_pic_file.save(os.path.join(app.config['UPLOAD_FOLDER'], profile_pic_name))
             user.profile_pic = profile_pic_name
             db.session.commit()
