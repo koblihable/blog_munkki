@@ -65,8 +65,8 @@ class CommentForm(FlaskForm):
     submit = SubmitField(label='Submit')
 
 # picture form
-#TODO fileAlowed, fileRequired
 class PictureForm(FlaskForm):
+    # TODO fileAllowed, fileRequired
     image = FileField(label='')
     update = SubmitField(label='Submit')
 
