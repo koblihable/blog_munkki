@@ -242,11 +242,12 @@ def configure_routes(app):
         return render_template('login.html', login_form=login_form)
 
 
-    # TODO: Change logout action to POST and style submit button as navbar link
-    @app.route('/logout')
+    # TODO: Finalize logout action to POST and style submit button as navbar link
+    @app.route('/logout', methods=['POST'])
     @login_required
     def logout():
         logout_user()
+        flash("You have been logged out.", "success")
         return redirect(url_for('home'))
 
 
