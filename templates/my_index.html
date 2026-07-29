@@ -34,7 +34,12 @@
                         <a href="{{ url_for('about_author') }}">{{ post.author.first_name | title }} {{ post_author_last_name | title }}</a>
                         on {{ post.date_created | datetimeformat }}. Last updated: {{ post.date_updated | datetimeformat }}
                         {% if current_user.is_admin %}
-                        <a href="{{ url_for('delete_post', post_id=post.id) }}">✘</a>
+                            <form method="POST" action="{{ url_for('delete_post', post_id=post.id) }}">
+                                <button type="submit" class="btn btn-danger">
+                                    Delete
+                                </button>
+                            </form>
+
                         {% endif %}
                     </p>
                 </div>

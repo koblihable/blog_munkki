@@ -15,6 +15,7 @@ class User(UserMixin, db.Model):
     email:Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     password:Mapped[str] = mapped_column(String(255), nullable=False)
     is_admin:Mapped[bool] = mapped_column(Boolean(), nullable=False, default=False)
+    is_protected: Mapped[bool] = mapped_column(Boolean(), nullable=False, default=False)
     profile_pic:Mapped[str] = mapped_column(String(255), nullable=True, default=None)
     date_created:Mapped[dt.datetime] = mapped_column(DateTime(), nullable=False, default=dt.datetime.now)
     date_updated: Mapped[dt.datetime] = mapped_column(DateTime(), nullable=False, default=dt.datetime.now)
@@ -35,7 +36,9 @@ class BlogPost(db.Model):
     subtitle:Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     body:Mapped[str] = mapped_column(Text, nullable=False, unique=True)
     date_created:Mapped[dt.datetime] = mapped_column(DateTime(), nullable=False, default=dt.datetime.now)
-    date_updated: Mapped[dt.datetime] = mapped_column(DateTime(), nullable=False, default=dt.datetime.now)
+    date_updated: Mapped[dt.datetime] = (
+        mapped_column(DateTime(), nullable=False, default=dt.datetime.now, onupdate=dt.datetime.now)
+    )
     img_url:Mapped[str] = mapped_column(String(255))
 
     # child relationship

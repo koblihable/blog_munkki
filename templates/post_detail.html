@@ -35,12 +35,8 @@
                     {% endif %}
 
 
-
-					{% if current_user.is_authenticated %}
-
                     {{ render_form(form, novalidate=True) }}
 
-					{% endif %}
 
 					<div class="be-comment-block">
 						<h1 class="comments-title">Comments ({{ post.post_comments | length }})</h1>
