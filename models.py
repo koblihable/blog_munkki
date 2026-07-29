@@ -29,6 +29,10 @@ class User(UserMixin, db.Model):
     def has_posts(self):
         return bool(self.posts)
 
+    @property
+    def has_comments(self):
+        return bool(self.comments)
+
 
 class BlogPost(db.Model):
     id:Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -56,7 +60,7 @@ class Comment(db.Model):
     text: Mapped[str] = mapped_column(String(255), nullable=False)
 
     # child relationships
-    author_id:Mapped[int] = mapped_column(Integer, ForeignKey(User.id), nullable=False)
+    author_id:Mapped[int] = mapped_column(Integer, ForeignKey(User.id, ondelete="SET NULL"), nullable=True)
     comment_author:Mapped['User'] = relationship('User', back_populates='comments')
     post_id:Mapped[int] = mapped_column(Integer, ForeignKey(BlogPost.id), nullable=False)
     parent_post:Mapped['BlogPost'] = relationship('BlogPost', back_populates='post_comments')

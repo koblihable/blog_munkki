@@ -260,6 +260,7 @@ def configure_routes(app):
 
 
     @app.route('/list_users')
+    @login_required
     @admin_required
     def list_users():
         users = db.session.execute(db.select(User).where(User.is_protected.is_(False)).order_by(User.id)).scalars().all()
@@ -269,6 +270,7 @@ def configure_routes(app):
 
     #TODO restyle the form buttons
     @app.route('/switch/<int:user_id>', methods=['POST'])
+    @login_required
     @admin_required
     def switch_admin(user_id):
         user = db.get_or_404(User, user_id)
@@ -282,21 +284,45 @@ def configure_routes(app):
 
         user.is_admin = not user.is_admin
         db.session.commit()
+
         flash(f'User {user.first_name} {user.last_name} has now been updated.', 'success')
 
         return redirect(url_for('list_users'))
 
-    #TODO make sure we cannot delete id#f it is protected
-    @app.route('/delete_user/<int:user_id>')
+
+    @app.route('/delete_user/<int:user_id>', methods=['POST'])
+    @login_required
     @admin_required
     def delete_user(user_id):
         user = db.get_or_404(User, user_id)
+
+        if user.id == current_user.id:
+            flash('You cannot delete your own account', 'danger')
+            return redirect(url_for('list_users'))
+
+        if user.is_protected:
+            flash('This user is protected. It cannot be deleted.', 'danger')
+            return redirect(url_for('list_users'))
+
+        if user.has_posts:
+            flash('This user created blog posts. It cannot be deleted.', 'danger')
+            return redirect(url_for('list_users'))
+
+        if user.has_comments:
+            flash(
+                'This user commented on blog posts. Existing comments will remain, but the author information will be removed.',
+                'warning'
+            )
+
         db.session.delete(user)
         db.session.commit()
+
+        flash(f'User {user.first_name} {user.last_name} has now been deleted.', 'success')
         return redirect(url_for('list_users'))
 
 
-    @app.route('/usr_profile/<int:user_id>')
+    @app.route('/user_profile/<int:user_id>')
+    @login_required
     def user_profile(user_id):
         user = db.get_or_404(User, user_id)
         return render_template('user_detail_profile.html', user=user)
