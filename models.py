@@ -1,10 +1,10 @@
 from sqlalchemy import Integer, String, Text, ForeignKey, Boolean, DateTime
 from typing import List
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from flask_login import UserMixin
-
 from extensions import db
 import datetime as dt
+
 
 
 
@@ -18,7 +18,10 @@ class User(UserMixin, db.Model):
     is_protected: Mapped[bool] = mapped_column(Boolean(), nullable=False, default=False)
     profile_pic:Mapped[str] = mapped_column(String(255), nullable=True, default=None)
     date_created:Mapped[dt.datetime] = mapped_column(DateTime(), nullable=False, default=dt.datetime.now)
-    date_updated: Mapped[dt.datetime] = mapped_column(DateTime(), nullable=False, default=dt.datetime.now)
+    date_updated: Mapped[dt.datetime] = mapped_column(DateTime(),
+                                                      nullable=False,
+                                                      default=dt.datetime.now,
+                                                      onupdate=dt.datetime.now)
     last_logged_in:Mapped[dt.datetime] = mapped_column(DateTime(), nullable=True, default=None)
 
     # parent relationships
@@ -28,6 +31,10 @@ class User(UserMixin, db.Model):
     @property
     def has_posts(self):
         return bool(self.posts)
+
+    @property
+    def has_comments(self):
+        return bool(self.comments)
 
 
 class BlogPost(db.Model):
@@ -56,7 +63,7 @@ class Comment(db.Model):
     text: Mapped[str] = mapped_column(String(255), nullable=False)
 
     # child relationships
-    author_id:Mapped[int] = mapped_column(Integer, ForeignKey(User.id), nullable=False)
+    author_id:Mapped[int] = mapped_column(Integer, ForeignKey(User.id, ondelete="SET NULL"), nullable=True)
     comment_author:Mapped['User'] = relationship('User', back_populates='comments')
     post_id:Mapped[int] = mapped_column(Integer, ForeignKey(BlogPost.id), nullable=False)
     parent_post:Mapped['BlogPost'] = relationship('BlogPost', back_populates='post_comments')

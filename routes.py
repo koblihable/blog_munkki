@@ -2,22 +2,15 @@ from forms import (BlogForm, UserForm, UpdateUserForm, LoginForm, ContactForm, C
                    PictureForm)
 from extensions import db
 from models import User, BlogPost, Comment
-from helpers import admin_required
+from decorators import admin_required
 import smtplib
-from flask import render_template, redirect, url_for, flash
+from flask import render_template, redirect, url_for, flash, abort
 from flask_login import login_user, current_user, logout_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import os
 import datetime as dt
 import uuid as uuid
-
-
-# info for the contact form
-APP_EMAIL=os.environ.get('EMAIL')
-APP_PASSWORD=os.environ.get('PASSWORD')
-
-
 
 
 def configure_routes(app):
@@ -176,7 +169,7 @@ def configure_routes(app):
 
         return render_template('post_detail.html', post=post, form=comment_form)
 
-
+    # TODO user activation
     @app.route('/register', methods=['GET', 'POST'])
     def register_user():
         form = UserForm()
@@ -185,18 +178,22 @@ def configure_routes(app):
             email = form.email.data.lower()
             # check if user already exists
             user = db.session.execute(db.select(User).where(User.email==email)).scalar_one_or_none()
+
             if user:
                 flash('User with this email address already exists. Please log in instead.', 'danger')
                 return redirect(url_for('login'))
+
             password = generate_password_hash(
                 form.password.data,
                 method='pbkdf2:sha256',
                 salt_length=8
             )
+
             # TODO: Validate uploaded profile images
             # TODO: Limit image size
             # TODO: Resize images before saving
             profile_pic_file = form.profile_pic.data
+
             if profile_pic_file:
                 #TODO make sure the form has enctype="multipart/form-data"
                 profile_pic_name = f"{uuid.uuid4()}_{secure_filename(profile_pic_file.filename)}"
@@ -219,6 +216,7 @@ def configure_routes(app):
 
 
     # TODO add remember me functionality
+    # TODO forgotten password
     # TODO consider using next functionality which allows users to be redirected to where they were after logging in
     @app.route('/login', methods=['GET', 'POST'])
     def login():
@@ -228,9 +226,11 @@ def configure_routes(app):
             email = login_form.email.data.lower()
             password = login_form.password.data
             user = db.session.execute(db.select(User).where(User.email==email)).scalar_one_or_none()
+
             if not user:
                 flash("Invalid email or password.","danger")
                 return redirect(url_for('register_user'))
+
             if not check_password_hash(user.password, password):
                 flash("Invalid email or password.","danger")
                 return redirect(url_for('login'))
@@ -238,6 +238,7 @@ def configure_routes(app):
             user.last_logged_in = dt.datetime.now()
             login_user(user)
             db.session.commit()
+
             return redirect(url_for('home'))
         return render_template('login.html', login_form=login_form)
 
@@ -248,77 +249,131 @@ def configure_routes(app):
     def logout():
         logout_user()
         flash("You have been logged out.", "success")
+
         return redirect(url_for('home'))
 
 
     @app.route('/list_users')
+    @login_required
     @admin_required
     def list_users():
-        result = db.session.execute(db.select(User).order_by(User.id)).scalars().all()
-        users = result[1:]
+        users = db.session.execute(db.select(User).where(User.is_protected.is_(False)).order_by(User.id)).scalars().all()
+
         return render_template('list_users.html', users=users)
 
 
-    @app.route('/switch/<int:user_id>')
+    #TODO restyle the form buttons
+    @app.route('/switch/<int:user_id>', methods=['POST'])
+    @login_required
     @admin_required
     def switch_admin(user_id):
         user = db.get_or_404(User, user_id)
-        if user.is_admin:
-            user.is_admin = False
-        else:
-            user.is_admin = True
+
+        if user.id == current_user.id:
+            flash('You cannot change your own admin status', 'danger')
+            return redirect(url_for('list_users'))
+
+        if user.is_protected:
+            flash('This user is protected. You cannot change the permission.', 'danger')
+
+        user.is_admin = not user.is_admin
         db.session.commit()
+
+        flash(f'User {user.first_name} {user.last_name} has now been updated.', 'success')
+
         return redirect(url_for('list_users'))
 
 
-    @app.route('/delete_user/<int:user_id>')
+    @app.route('/delete_user/<int:user_id>', methods=['POST'])
+    @login_required
     @admin_required
     def delete_user(user_id):
         user = db.get_or_404(User, user_id)
+
+        if user.id == current_user.id:
+            flash('You cannot delete your own account', 'danger')
+            return redirect(url_for('list_users'))
+
+        if user.is_protected:
+            flash('This user is protected. It cannot be deleted.', 'danger')
+            return redirect(url_for('list_users'))
+
+        if user.has_posts:
+            flash('This user created blog posts. It cannot be deleted.', 'danger')
+            return redirect(url_for('list_users'))
+
+        if user.has_comments:
+            flash(
+                'This user commented on blog posts. Existing comments will remain, but the author information will be removed.',
+                'warning'
+            )
+
         db.session.delete(user)
         db.session.commit()
+
+        flash(f'User {user.first_name} {user.last_name} has now been deleted.', 'success')
         return redirect(url_for('list_users'))
 
 
-    @app.route('/usr_profile/<int:user_id>')
+    @app.route('/user_profile/<int:user_id>')
+    @login_required
     def user_profile(user_id):
         user = db.get_or_404(User, user_id)
         return render_template('user_detail_profile.html', user=user)
 
 
     @app.route('/usr_settings/<int:user_id>', methods=['GET', 'POST'])
+    @login_required
     def user_settings(user_id):
         user = db.get_or_404(User, user_id)
-        picture_form = PictureForm()
+        if user.id != current_user.id:
+            abort(403)
 
+        picture_form = PictureForm()
         user_form = UpdateUserForm(obj=user)
         password_form = ChangePasswordForm()
 
-        #TODO move into separate functions
-        if user_form.submit.data and user_form.validate():
+        if user_form.submit.data and user_form.validate_on_submit():
+
+            existing_user = db.session.execute(
+                db.select(User).where(User.email == user_form.email.data.lower())
+            ).scalar_one_or_none()
+
+            if existing_user and existing_user.id != user.id:
+                flash('This email address already exists', 'danger')
+
+                return redirect(url_for('usr_settings'))
+
             user.first_name=user_form.first_name.data
             user.last_name=user_form.last_name.data
             user.email=user_form.email.data.lower()
-            user.date_updated = dt.datetime.now()
             db.session.commit()
+            flash('Details updated successfully.', 'success')
+
             return redirect(url_for('user_settings', user_id=user.id))
 
-        elif picture_form.update.data and picture_form.validate():
+        elif picture_form.update.data and picture_form.validate_on_submit():
 
+            #TODO eventually have a helper function
             profile_pic_file = picture_form.image.data
+
             if profile_pic_file:
                 profile_pic_name = f"{uuid.uuid4()}_{secure_filename(profile_pic_file.filename)}"
                 profile_pic_file.save(os.path.join(app.config['UPLOAD_FOLDER'], profile_pic_name))
                 user.profile_pic = profile_pic_name
                 db.session.commit()
+                flash('Profile picture updated successfully.', 'success')
+
                 return redirect(url_for('user_settings', user_id=user.id))
 
-        elif password_form.update.data and password_form.validate():
+        elif password_form.update.data and password_form.validate_on_submit():
             old_password = password_form.old_password.data
-            current_password = user.password
-            if not check_password_hash(current_password, old_password):
+
+            if not check_password_hash(user.password, old_password):
                 flash('Password is incorrect. Try again.', 'danger')
+
                 return redirect(url_for('user_settings', user_id=user.id))
+
             else:
                 password = generate_password_hash(
                     password_form.new_password.data,
@@ -327,6 +382,8 @@ def configure_routes(app):
                 )
                 user.password = password
                 db.session.commit()
+                flash('Password updated successfully.', 'success')
+
                 return redirect(url_for('user_settings', user_id=user.id))
 
         return render_template(

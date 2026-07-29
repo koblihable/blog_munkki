@@ -10,8 +10,3 @@ def admin_required(f):
             return abort(403)
         return f(*args, **kwargs)
     return decorated_function
-
-
-#### filters
-def datetimeformat(value, string_format='%B %d, %Y'):
-    return value.strftime(string_format)
