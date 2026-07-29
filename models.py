@@ -1,10 +1,10 @@
 from sqlalchemy import Integer, String, Text, ForeignKey, Boolean, DateTime
 from typing import List
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from flask_login import UserMixin
-
 from extensions import db
 import datetime as dt
+
 
 
 

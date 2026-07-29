@@ -2,7 +2,7 @@ from forms import (BlogForm, UserForm, UpdateUserForm, LoginForm, ContactForm, C
                    PictureForm)
 from extensions import db
 from models import User, BlogPost, Comment
-from helpers import admin_required
+from decorators import admin_required
 import smtplib
 from flask import render_template, redirect, url_for, flash, abort
 from flask_login import login_user, current_user, logout_user, login_required
@@ -11,13 +11,6 @@ from werkzeug.utils import secure_filename
 import os
 import datetime as dt
 import uuid as uuid
-
-
-# info for the contact form
-APP_EMAIL=os.environ.get('EMAIL')
-APP_PASSWORD=os.environ.get('PASSWORD')
-
-
 
 
 def configure_routes(app):
@@ -176,7 +169,7 @@ def configure_routes(app):
 
         return render_template('post_detail.html', post=post, form=comment_form)
 
-
+    # TODO user activation
     @app.route('/register', methods=['GET', 'POST'])
     def register_user():
         form = UserForm()
@@ -223,6 +216,7 @@ def configure_routes(app):
 
 
     # TODO add remember me functionality
+    # TODO forgotten password
     # TODO consider using next functionality which allows users to be redirected to where they were after logging in
     @app.route('/login', methods=['GET', 'POST'])
     def login():
