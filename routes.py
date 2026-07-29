@@ -185,18 +185,22 @@ def configure_routes(app):
             email = form.email.data.lower()
             # check if user already exists
             user = db.session.execute(db.select(User).where(User.email==email)).scalar_one_or_none()
+
             if user:
                 flash('User with this email address already exists. Please log in instead.', 'danger')
                 return redirect(url_for('login'))
+
             password = generate_password_hash(
                 form.password.data,
                 method='pbkdf2:sha256',
                 salt_length=8
             )
+
             # TODO: Validate uploaded profile images
             # TODO: Limit image size
             # TODO: Resize images before saving
             profile_pic_file = form.profile_pic.data
+
             if profile_pic_file:
                 #TODO make sure the form has enctype="multipart/form-data"
                 profile_pic_name = f"{uuid.uuid4()}_{secure_filename(profile_pic_file.filename)}"
@@ -228,9 +232,11 @@ def configure_routes(app):
             email = login_form.email.data.lower()
             password = login_form.password.data
             user = db.session.execute(db.select(User).where(User.email==email)).scalar_one_or_none()
+
             if not user:
                 flash("Invalid email or password.","danger")
                 return redirect(url_for('register_user'))
+
             if not check_password_hash(user.password, password):
                 flash("Invalid email or password.","danger")
                 return redirect(url_for('login'))
@@ -238,6 +244,7 @@ def configure_routes(app):
             user.last_logged_in = dt.datetime.now()
             login_user(user)
             db.session.commit()
+
             return redirect(url_for('home'))
         return render_template('login.html', login_form=login_form)
 
@@ -248,29 +255,38 @@ def configure_routes(app):
     def logout():
         logout_user()
         flash("You have been logged out.", "success")
+
         return redirect(url_for('home'))
 
 
     @app.route('/list_users')
     @admin_required
     def list_users():
-        result = db.session.execute(db.select(User).order_by(User.id)).scalars().all()
-        users = result[1:]
+        users = db.session.execute(db.select(User).where(User.is_protected.is_(False)).order_by(User.id)).scalars().all()
+
         return render_template('list_users.html', users=users)
 
 
-    @app.route('/switch/<int:user_id>')
+    #TODO restyle the form buttons
+    @app.route('/switch/<int:user_id>', methods=['POST'])
     @admin_required
     def switch_admin(user_id):
         user = db.get_or_404(User, user_id)
-        if user.is_admin:
-            user.is_admin = False
-        else:
-            user.is_admin = True
+
+        if user.id == current_user.id:
+            flash('You cannot change your own admin status', 'danger')
+            return redirect(url_for('list_users'))
+
+        if user.is_protected:
+            flash('This user is protected. You cannot change the permission.', 'danger')
+
+        user.is_admin = not user.is_admin
         db.session.commit()
+        flash(f'User {user.first_name} {user.last_name} has now been updated.', 'success')
+
         return redirect(url_for('list_users'))
 
-
+    #TODO make sure we cannot delete id#f it is protected
     @app.route('/delete_user/<int:user_id>')
     @admin_required
     def delete_user(user_id):
