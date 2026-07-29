@@ -6,6 +6,7 @@ from flask import Flask
 from flask_bootstrap import Bootstrap5
 from flask_ckeditor import CKEditor
 from flask_migrate import Migrate
+import os
 
 
 
@@ -14,7 +15,8 @@ from flask_migrate import Migrate
 # TODO forgotten password
 # TODO password obfuscation on create and update
 
-
+# secret key for create form
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 
 #TODO

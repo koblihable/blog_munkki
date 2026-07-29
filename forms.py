@@ -13,6 +13,7 @@ EMAIL_VALIDATORS = [
 
 # create blog post
 class BlogForm(FlaskForm):
+    #TODO add a validator for a unique title
     title = StringField(label='Title', validators=[DataRequired()])
     subtitle = StringField(label='Subtitle', validators=[DataRequired()])
     body = CKEditorField(label='Text', validators=[DataRequired()])
