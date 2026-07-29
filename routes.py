@@ -4,7 +4,7 @@ from extensions import db
 from models import User, BlogPost, Comment
 from helpers import admin_required
 import smtplib
-from flask import render_template, redirect, url_for, flash
+from flask import render_template, redirect, url_for, flash, abort
 from flask_login import login_user, current_user, logout_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -329,38 +329,57 @@ def configure_routes(app):
 
 
     @app.route('/usr_settings/<int:user_id>', methods=['GET', 'POST'])
+    @login_required
     def user_settings(user_id):
         user = db.get_or_404(User, user_id)
-        picture_form = PictureForm()
+        if user.id != current_user.id:
+            abort(403)
 
+        picture_form = PictureForm()
         user_form = UpdateUserForm(obj=user)
         password_form = ChangePasswordForm()
 
-        #TODO move into separate functions
-        if user_form.submit.data and user_form.validate():
+        if user_form.submit.data and user_form.validate_on_submit():
+
+            existing_user = db.session.execute(
+                db.select(User).where(User.email == user_form.email.data.lower())
+            ).scalar_one_or_none()
+
+            if existing_user and existing_user.id != user.id:
+                flash('This email address already exists', 'danger')
+
+                return redirect(url_for('usr_settings'))
+
             user.first_name=user_form.first_name.data
             user.last_name=user_form.last_name.data
             user.email=user_form.email.data.lower()
-            user.date_updated = dt.datetime.now()
             db.session.commit()
+            flash('Details updated successfully.', 'success')
+
             return redirect(url_for('user_settings', user_id=user.id))
 
-        elif picture_form.update.data and picture_form.validate():
+        elif picture_form.update.data and picture_form.validate_on_submit():
 
+            #TODO eventually have a helper function
             profile_pic_file = picture_form.image.data
+
             if profile_pic_file:
                 profile_pic_name = f"{uuid.uuid4()}_{secure_filename(profile_pic_file.filename)}"
                 profile_pic_file.save(os.path.join(app.config['UPLOAD_FOLDER'], profile_pic_name))
                 user.profile_pic = profile_pic_name
                 db.session.commit()
+                flash('Profile picture updated successfully.', 'success')
+
                 return redirect(url_for('user_settings', user_id=user.id))
 
-        elif password_form.update.data and password_form.validate():
+        elif password_form.update.data and password_form.validate_on_submit():
             old_password = password_form.old_password.data
-            current_password = user.password
-            if not check_password_hash(current_password, old_password):
+
+            if not check_password_hash(user.password, old_password):
                 flash('Password is incorrect. Try again.', 'danger')
+
                 return redirect(url_for('user_settings', user_id=user.id))
+
             else:
                 password = generate_password_hash(
                     password_form.new_password.data,
@@ -369,6 +388,8 @@ def configure_routes(app):
                 )
                 user.password = password
                 db.session.commit()
+                flash('Password updated successfully.', 'success')
+
                 return redirect(url_for('user_settings', user_id=user.id))
 
         return render_template(
