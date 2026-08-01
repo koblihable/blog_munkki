@@ -29,19 +29,20 @@
                         <h2 class="post-title">{{ post.title }}</h2>
                         <h3 class="post-subtitle">{{ post.subtitle }}</h3>
                     </a>
-                    <p class="post-meta">
+                    <div class="post-meta">
                         Posted by
                         <a href="{{ url_for('about_author') }}">{{ post.author.first_name | title }} {{ post_author_last_name | title }}</a>
                         on {{ post.date_created | datetimeformat }}. Last updated: {{ post.date_updated | datetimeformat }}
                         {% if current_user.is_admin %}
-                            <form method="POST" action="{{ url_for('delete_post', post_id=post.id) }}">
-                                <button type="submit" class="btn btn-danger">
-                                    Delete
-                                </button>
-                            </form>
+                        <!--a href="{{ url_for('delete_post', post_id=post.id) }}">✘</a-->
+
+                        <form method="POST" action="{{ url_for('delete_post', post_id=post.id) }}" style="display:inline;">
+                            {{ delete_form.hidden_tag() }}
+                            <button type="submit" class="btn btn-link p-0 border-0 text-danger">✘</button>
+                        </form>
 
                         {% endif %}
-                    </p>
+                    </div>
                 </div>
                 <hr class="my-4" />
                 {% endfor %}

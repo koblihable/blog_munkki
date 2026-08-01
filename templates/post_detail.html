@@ -14,7 +14,7 @@
                         <h2 class="subheading">{{ post.subtitle }}</h2>
                         <span class="meta">
                             Posted by
-                            <a href="{{ url_for('about_author') }}">{{ post.author }}</a>
+                            <a href="{{ url_for('about_author') }}">{{ post.author.first_name }} {{ post.author.last_name }}</a>
                             on {{ post.date_created | datetimeformat }}. Last updated: {{ post.date_updated | datetimeformat }}
                         </span>
                     </div>
@@ -25,6 +25,15 @@
     <!-- Post Content-->
     <article class="mb-4">
         <div class="container px-4 px-lg-5">
+
+                            {% with messages = get_flashed_messages(with_categories=True) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
             <div class="row gx-4 gx-lg-5 justify-content-center">
                 <div class="col-md-10 col-lg-8 col-xl-7">
                     {{ post.body | safe }}

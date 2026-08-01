@@ -1,11 +1,11 @@
 from wtforms import StringField, PasswordField
 from wtforms.fields.simple import SubmitField, TextAreaField, FileField
-from wtforms.validators import DataRequired, Regexp, Length, EqualTo, Email
+from wtforms.validators import DataRequired, Length, EqualTo, Email
 from flask_wtf import FlaskForm
 from flask_ckeditor import CKEditorField
 
 
-# TODO add tests
+
 EMAIL_VALIDATORS = [
     DataRequired(),
     Email(message="Please enter a valid email address")
@@ -19,6 +19,9 @@ class BlogForm(FlaskForm):
     body = CKEditorField(label='Text', validators=[DataRequired()])
     img_url = StringField(label='Image')
     submit = SubmitField(label='Post')
+
+class DeleteBlogForm(FlaskForm):
+    pass
 
 # create/ update a user
 class UserForm(FlaskForm):

@@ -1,25 +1,32 @@
-from forms import (BlogForm, UserForm, UpdateUserForm, LoginForm, ContactForm, CommentForm, ChangePasswordForm,
-                   PictureForm)
+from forms import (BlogForm, DeleteBlogForm, UserForm, UpdateUserForm, LoginForm, ContactForm, CommentForm,
+                   ChangePasswordForm, PictureForm)
 from extensions import db
 from models import User, BlogPost, Comment
 from decorators import admin_required
+
+from flask import current_app
+
 import smtplib
-from flask import render_template, redirect, url_for, flash, abort
-from flask_login import login_user, current_user, logout_user, login_required
-from werkzeug.security import generate_password_hash, check_password_hash
-from werkzeug.utils import secure_filename
 import os
 import datetime as dt
 import uuid as uuid
 
+from flask import render_template, redirect, url_for, flash, abort
+from flask_login import login_user, current_user, logout_user, login_required
+from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
+
+#TODO injecting forms
 
 def configure_routes(app):
     # routes
     @app.route('/')
     def home():
         recent_blog_posts = db.session.execute(
-            db.select(BlogPost).order_by(BlogPost.date_created.desc().limit(3)).scalars().all()
-        )
+            db.select(BlogPost)
+            .order_by(BlogPost.date_created.desc())
+            .limit(3)
+        ).scalars().all()
 
         return render_template('index.html', posts=recent_blog_posts)
 
@@ -27,8 +34,9 @@ def configure_routes(app):
     @app.route('/old_posts')
     def old_posts():
         old_blog_posts = db.session.execute(
-            db.select(BlogPost).order_by(BlogPost.date_created.desc()).scalars().all()
-        )
+            db.select(BlogPost)
+            .order_by(BlogPost.date_created.desc())
+        ).scalars().all()
 
         return render_template('older_posts.html', posts=old_blog_posts[3:])
 
@@ -45,13 +53,15 @@ def configure_routes(app):
             ).scalars().all()
         )
 
-        return render_template('my_index.html', posts=my_blog_posts)
+        delete_form = DeleteBlogForm()
+
+        return render_template('my_index.html', posts=my_blog_posts, delete_form=delete_form)
 
 
     @app.route('/create', methods=['GET', 'POST'])
     @login_required
     @admin_required
-    def create_blog():
+    def create_post():
         form = BlogForm()
 
         if form.validate_on_submit():
@@ -89,10 +99,13 @@ def configure_routes(app):
 
             flash("Blog post updated.", "success")
             return redirect(url_for('blog_post_detail', post_id=post.id))
+
         return render_template('edit_blog_post.html', post=post, edit_form=edit_form)
 
 
     #TODO restyle the delete button
+    #TODO ask for confirmation before deleting
+    #TODO deal with csrf
     @app.route('/delete/<int:post_id>', methods=['POST'])
     @login_required
     @admin_required
@@ -101,7 +114,7 @@ def configure_routes(app):
         db.session.delete(post)
         db.session.commit()
 
-        flash("Blog post deleted.", "success")
+        flash("Blog post deleted.", "warning")
         return redirect(url_for('home'))
 
 
@@ -119,29 +132,36 @@ def configure_routes(app):
             user_email = form.email.data
             phone = form.phone.data
             message = form.message.data
+
+            # TODO: Move email sending into email_service.py
+            # TODO: Add logging when email sending fails
             email_message = (
-                f"Subject: New Message\n\n"
+                f"Subject: Blog Message\n\n"
                 f"Name: {name}\n"
-                f"Email: {user_email}\n"
+                f"From: {user_email}\n"
                 f"Phone: {phone}\n"
                 f"Message: {message}"
             )
-            # TODO: Move email sending into email_service.py
-            # TODO: Read SMTP server and port from config.py
-            # TODO: Add logging when email sending fails
+
+            app_email = current_app.config.get("MAIL_USERNAME")
+            app_email_password = current_app.config.get("MAIL_PASSWORD")
+
             try:
                 with smtplib.SMTP("smtp.gmail.com") as connection:
                     connection.starttls()
-                    connection.login(APP_EMAIL, APP_PASSWORD)
-                    connection.sendmail(APP_EMAIL, APP_EMAIL, email_message)
+                    connection.login(app_email, app_email_password)
+                    connection.sendmail(app_email, app_email, email_message)
+
+                flash("Message sent.", "success")
+                return redirect(url_for("contact"))
+
             except Exception:
                 flash(
                     "Sorry, your message could not be sent. Please try again later.",
                     "danger",
                 )
                 return redirect(url_for("contact"))
-            flash("Message sent.", "success")
-            return redirect(url_for("contact"))
+
         return render_template("contact.html", form=form)
 
 
@@ -204,14 +224,15 @@ def configure_routes(app):
                 last_name=form.last_name.data,
                 email=email,
                 password=password,
-                profile_pic=profile_pic_name if profile_pic_file else None,
-                last_logged_in=None
+                profile_pic=profile_pic_name if profile_pic_file else None
             )
             db.session.add(new_user)
             db.session.commit()
             login_user(new_user)
 
+            flash('Your account has been created', 'success')
             return redirect(url_for('home'))
+
         return render_template('register.html', register_form=form)
 
 
@@ -239,7 +260,9 @@ def configure_routes(app):
             login_user(user)
             db.session.commit()
 
+            flash('Successfully logged in', 'success')
             return redirect(url_for('home'))
+
         return render_template('login.html', login_form=login_form)
 
 
@@ -248,8 +271,8 @@ def configure_routes(app):
     @login_required
     def logout():
         logout_user()
-        flash("You have been logged out.", "success")
 
+        flash("You have been logged out.", "success")
         return redirect(url_for('home'))
 
 
@@ -257,6 +280,7 @@ def configure_routes(app):
     @login_required
     @admin_required
     def list_users():
+        #TODO currently you cannot change your own rights and the current user is displayed as LOGGED IN. What about changing rights of other logged in users?
         users = db.session.execute(db.select(User).where(User.is_protected.is_(False)).order_by(User.id)).scalars().all()
 
         return render_template('list_users.html', users=users)
@@ -280,7 +304,6 @@ def configure_routes(app):
         db.session.commit()
 
         flash(f'User {user.first_name} {user.last_name} has now been updated.', 'success')
-
         return redirect(url_for('list_users'))
 
 

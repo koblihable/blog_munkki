@@ -3601,7 +3601,7 @@ textarea.form-control-lg {
   }
 }
 .nav-link:hover, .nav-link:focus {
-  color: var(--bs-nav-link-hover-color);
+    color: var(--bs-link-hover-color);
 }
 .nav-link.disabled {
   color: var(--bs-nav-link-disabled-color);
@@ -11802,10 +11802,23 @@ td.data {
     display: flex;
 }
 
-.logout-button {
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    font: inherit;
+.post-link {
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.0625em;
+  text-transform: uppercase;
+  padding-top: 1.5rem !important;
+  padding-bottom: 1.5rem !important;
+  padding-right: 1rem !important;
+  padding-left: 1rem !important;
+}
+
+poat-link:hover {
+  color: var(--bs-link-hover-color);
+}
+
+post-link:not([href]):not([class]), a:not([href]):not([class]):hover {
+  color: inherit;
+  text-decoration: none;
 }

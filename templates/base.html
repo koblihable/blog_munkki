@@ -28,7 +28,7 @@
             <div class="container px-4 px-lg-5">
 
                 {% if current_user.is_admin %}
-                <a class="navbar-brand" href="{{ url_for('create_blog') }}">Create post</a>
+                <a class="navbar-brand" href="{{ url_for('create_post') }}">Create post</a>
                 {% endif %}
 
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
@@ -54,13 +54,11 @@
                         <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" href="{{ url_for('about_author') }}">About</a></li>
                         <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" href="{{ url_for('contact') }}">Contact</a></li>
                         <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" href="{{ url_for('list_users') }}">Active Users</a></li>
-                        <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" href="{{ url_for('logout') }}">Log Out</a></li>
-
-                        <!--li class="nav-item">
+                        <li class="nav-item">
                             <form method="POST" action="{{ url_for('logout') }}">
-                                <button type="submit" class="nav-link logout-button">Log Out</button>
+                                <button type="submit" class="nav-link post-link">Log Out</button>
                             </form>
-                        </li-->
+                        </li>
 
                         <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" href="{{ url_for('user_profile', user_id=current_user.id) }}">My Profile</a></li>
                     </ul>
@@ -72,7 +70,11 @@
                         <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" href="{{ url_for('home') }}">Home</a></li>
                         <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" href="{{ url_for('about_author') }}">About</a></li>
                         <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" href="{{ url_for('contact') }}">Contact</a></li>
-                        <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" href="{{ url_for('logout') }}">Log Out</a></li>
+                        <li class="nav-item">
+                            <form method="POST" action="{{ url_for('logout') }}">
+                                <button type="submit" class="nav-link logout-button post-link">Log Out</button>
+                            </form>
+                        </li>
                         <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" href="{{ url_for('user_profile', user_id=current_user.id) }}">My Profile</a></li>
                     </ul>
                 </div>

@@ -9,6 +9,10 @@ from routes import configure_routes
 import auth
 
 
+
+# TODO add tests
+
+
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
@@ -16,7 +20,7 @@ def create_app():
     db.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = 'login'
-    
+
     migrate.init_app(app, db)
     ckeditor.init_app(app)
     bootstrap.init_app(app)

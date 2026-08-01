@@ -18,6 +18,13 @@
 
     <div class="container px-4 px-lg-5">
         <div class="row gx-4 gx-lg-5 justify-content-center">
+            {% with messages = get_flashed_messages(with_categories=True) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+            {% endwith %}
 
                     <table>
                         <tr>
@@ -34,7 +41,7 @@
                             <td>
                                 <div class="user-info">
                                     {% if user.profile_pic %}
-                                    <img src="{{ url_for('static', filename='usr_images/') }}{{ user.profile_pic }}" alt="" class="be-ava-comment">
+                                    <img src="{{ url_for('static', filename='uploads/') }}{{ user.profile_pic }}" alt="" class="be-ava-comment">
                                     {% else %}
                                     <div class="user-info">
                                         <i class="fa-solid fa-user-secret"></i>
@@ -53,25 +60,25 @@
 
                             {% if user == current_user %}
                                 <td>Logged in</td>
-                            {% elif user.blog_posts | length > 0 %}
-                                <td><a class="btn btn-switch text-uppercase" href="{{ url_for('switch_admin', user_id=user.id) }}">Switch</a></td>
+                            {% elif user.has_posts %}
+                                <td class="nav-item">
+                                    <form method="POST" action="{{ url_for('switch_admin', user_id=user.id) }}">
+                                        <button type="submit" class="btn btn-switch text-uppercase">Switch</button>
+                                    </form>
+                                </td>
                                 <td>Has posts</td>
                             {% else %}
-                                <td><a class="btn btn-switch text-uppercase" href="{{ url_for('switch_admin', user_id=user.id) }}">Switch</a></td>
+                               <td class="nav-item">
+                                    <form method="POST" action="{{ url_for('switch_admin', user_id=user.id) }}">
+                                        <button type="submit" class="btn btn-switch text-uppercase">Switch</button>
+                                    </form>
+                                </td>
 
-                        <!--li class="nav-item">
-                            <form method="POST" action="{{ url_for('switch_admin', user_id=user.id) }}">
-                                <button type="submit" class="nav-link logout-button">Switch</button>
-                            </form>
-                        </li-->
-
-                                <td><a class="btn btn-delete text-uppercase" href="{{ url_for('delete_user', user_id=user.id) }}">Delete</a></td>
-
-                        <!--li class="nav-item">
-                            <form method="POST" action="{{ url_for('delete_user', user_id=user.id) }}">
-                                <button type="submit" class="nav-link logout-button">Delete</button>
-                            </form>
-                        </li-->
+                               <td class="nav-item">
+                                    <form method="POST" action="{{ url_for('delete_user', user_id=user.id) }}">
+                                        <button type="submit" class="btn btn-delete text-uppercase">Delete</button>
+                                    </form>
+                               </td>
 
                             {% endif %}
                         </tr>
