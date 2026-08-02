@@ -85,20 +85,19 @@
                                         {% endif %}
 									</div>
 
-									<a onclick="displayPictureUpdate()" class="btn btn-switch">Upload</a>
-                                    <button type="button" class="btn btn-delete">Remove</button>
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <a onclick="displayPictureUpdate()" class="btn btn-switch">Upload</a>
+
+                                        <form method="POST" action="{{ url_for('remove_picture', user_id=user.id) }}">
+                                            {{ action_form.hidden_tag() }}
+                                            <button type="submit" class="btn btn-delete">Remove</button>
+                                        </form>
+                                    </div>
+
+
                                     <br/><br/>
                                     <div id="pictureUpdate" style="display: none;">
                                         {{ render_form(picture_form, novalidate=True) }}
-                                        {% if user.profile_pic %}
-                                            <div class="user-info">
-                                                <img src="{{ url_for('static', filename='usr_images/') }}{{ user.profile_pic }}" alt="" class="be-ava-comment">
-                                            </div>
-                                        {% else %}
-                                            <div class="user-info">
-                                            <i class="fa-solid fa-user-secret"></i>
-                                        </div>
-                                        {% endif %}
                                     </div>
                                     <br/><br/>
     							</div>
