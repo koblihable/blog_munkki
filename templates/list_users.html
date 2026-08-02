@@ -63,6 +63,7 @@
                             {% elif user.has_posts %}
                                 <td class="nav-item">
                                     <form method="POST" action="{{ url_for('switch_admin', user_id=user.id) }}">
+                                        {{ action_form.hidden_tag() }}
                                         <button type="submit" class="btn btn-switch text-uppercase">Switch</button>
                                     </form>
                                 </td>
@@ -70,12 +71,14 @@
                             {% else %}
                                <td class="nav-item">
                                     <form method="POST" action="{{ url_for('switch_admin', user_id=user.id) }}">
+                                        {{ action_form.hidden_tag() }}
                                         <button type="submit" class="btn btn-switch text-uppercase">Switch</button>
                                     </form>
                                 </td>
 
                                <td class="nav-item">
                                     <form method="POST" action="{{ url_for('delete_user', user_id=user.id) }}">
+                                        {{ action_form.hidden_tag() }}
                                         <button type="submit" class="btn btn-delete text-uppercase">Delete</button>
                                     </form>
                                </td>

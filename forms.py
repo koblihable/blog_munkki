@@ -11,6 +11,11 @@ EMAIL_VALIDATORS = [
     Email(message="Please enter a valid email address")
 ]
 
+# delete blog, delete user, logout, switch admin
+class ActionForm(FlaskForm):
+    # used for csrf protection
+    pass
+
 # create blog post
 class BlogForm(FlaskForm):
     #TODO add a validator for a unique title
@@ -19,9 +24,6 @@ class BlogForm(FlaskForm):
     body = CKEditorField(label='Text', validators=[DataRequired()])
     img_url = StringField(label='Image')
     submit = SubmitField(label='Post')
-
-class DeleteBlogForm(FlaskForm):
-    pass
 
 # create/ update a user
 class UserForm(FlaskForm):

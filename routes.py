@@ -1,4 +1,4 @@
-from forms import (BlogForm, DeleteBlogForm, UserForm, UpdateUserForm, LoginForm, ContactForm, CommentForm,
+from forms import (BlogForm, UserForm, UpdateUserForm, LoginForm, ContactForm, CommentForm,
                    ChangePasswordForm, PictureForm)
 from extensions import db
 from models import User, BlogPost, Comment
@@ -16,7 +16,6 @@ from flask_login import login_user, current_user, logout_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
-#TODO injecting forms
 
 def configure_routes(app):
     # routes
@@ -53,9 +52,8 @@ def configure_routes(app):
             ).scalars().all()
         )
 
-        delete_form = DeleteBlogForm()
 
-        return render_template('my_index.html', posts=my_blog_posts, delete_form=delete_form)
+        return render_template('my_index.html', posts=my_blog_posts)
 
 
     @app.route('/create', methods=['GET', 'POST'])
@@ -103,9 +101,7 @@ def configure_routes(app):
         return render_template('edit_blog_post.html', post=post, edit_form=edit_form)
 
 
-    #TODO restyle the delete button
     #TODO ask for confirmation before deleting
-    #TODO deal with csrf
     @app.route('/delete/<int:post_id>', methods=['POST'])
     @login_required
     @admin_required
@@ -266,13 +262,12 @@ def configure_routes(app):
         return render_template('login.html', login_form=login_form)
 
 
-    # TODO: Finalize logout action to POST and style submit button as navbar link
     @app.route('/logout', methods=['POST'])
     @login_required
     def logout():
         logout_user()
 
-        flash("You have been logged out.", "success")
+        flash("You have been logged out.", "warning")
         return redirect(url_for('home'))
 
 
@@ -307,6 +302,7 @@ def configure_routes(app):
         return redirect(url_for('list_users'))
 
 
+    # TODO add a confirmation popup
     @app.route('/delete_user/<int:user_id>', methods=['POST'])
     @login_required
     @admin_required
