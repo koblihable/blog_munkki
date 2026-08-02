@@ -1,15 +1,20 @@
 from wtforms import StringField, PasswordField
 from wtforms.fields.simple import SubmitField, TextAreaField, FileField
-from wtforms.validators import DataRequired, Regexp, Length, EqualTo, Email
+from wtforms.validators import DataRequired, Length, EqualTo, Email
 from flask_wtf import FlaskForm
 from flask_ckeditor import CKEditorField
 
 
-# TODO add tests
+
 EMAIL_VALIDATORS = [
     DataRequired(),
     Email(message="Please enter a valid email address")
 ]
+
+# delete blog, delete user, logout, switch admin
+class ActionForm(FlaskForm):
+    # used for csrf protection
+    pass
 
 # create blog post
 class BlogForm(FlaskForm):

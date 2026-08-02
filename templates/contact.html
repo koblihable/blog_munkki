@@ -18,8 +18,19 @@
         </div>
     </header>
     <!-- Main Content-->
+
     <main class="mb-4">
+
         <div class="container px-4 px-lg-5">
+
+                {% with messages = get_flashed_messages(with_categories=True) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
             {% if msg_sent %}
                 <p>Message sent successfully</p>
             {% else %}

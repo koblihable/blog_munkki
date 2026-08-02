@@ -4,9 +4,14 @@ from extensions import db, login_manager, migrate, ckeditor, bootstrap
 from config import Config
 from template_filters import datetimeformat
 from routes import configure_routes
+from forms import ActionForm
 
 # Registers Flask-Login user loader
 import auth
+
+
+
+# TODO add tests
 
 
 def create_app():
@@ -16,12 +21,18 @@ def create_app():
     db.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = 'login'
-    
+
     migrate.init_app(app, db)
     ckeditor.init_app(app)
     bootstrap.init_app(app)
 
     app.add_template_filter(datetimeformat, 'datetimeformat')
+
+    @app.context_processor
+    def inject_forms():
+        return {
+            'action_form': ActionForm()
+        }
 
     configure_routes(app)
 
