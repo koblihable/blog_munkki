@@ -245,11 +245,11 @@ def configure_routes(app):
             user = db.session.execute(db.select(User).where(User.email==email)).scalar_one_or_none()
 
             if not user:
-                flash("Invalid email or password.","danger")
+                flash('Invalid email or password.','danger')
                 return redirect(url_for('register_user'))
 
             if not check_password_hash(user.password, password):
-                flash("Invalid email or password.","danger")
+                flash('Invalid email or password.','danger')
                 return redirect(url_for('login'))
 
             user.last_logged_in = dt.datetime.now()
@@ -371,7 +371,7 @@ def configure_routes(app):
 
             return redirect(url_for('user_settings', user_id=user.id))
 
-        elif picture_form.update.data and picture_form.validate_on_submit():
+        elif picture_form.upload.data and picture_form.validate_on_submit():
 
             #TODO eventually have a helper function
             profile_pic_file = picture_form.image.data
@@ -389,7 +389,7 @@ def configure_routes(app):
             old_password = password_form.old_password.data
 
             if not check_password_hash(user.password, old_password):
-                flash('Password is incorrect. Try again.', 'danger')
+                flash('Current password is incorrect. Try again.', 'danger')
 
                 return redirect(url_for('user_settings', user_id=user.id))
 
@@ -412,6 +412,27 @@ def configure_routes(app):
             picture_form=picture_form,
             password_form=password_form
         )
+
+
+    @app.route('/usr_settings/<int:user_id>/remove_picture', methods=['POST'])
+    def remove_picture(user_id):
+        user = db.get_or_404(User, user_id)
+
+        #TODO delete the orphaned files
+        '''filepath = os.path.join(
+    current_app.config["UPLOAD_FOLDER"],
+    user.profile_pic
+)
+
+if os.path.exists(filepath):
+    os.remove(filepath)'''
+        user.profile_pic = None
+        db.session.commit()
+
+        #TODO add a confirmation popup
+        flash('Profile picture has been deleted', 'warning')
+        return redirect(url_for('user_settings', user_id=user_id))
+
 
     @app.route('/usr_comments/<int:user_id>')
     def user_comments(user_id):

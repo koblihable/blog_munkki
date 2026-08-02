@@ -74,7 +74,7 @@ class CommentForm(FlaskForm):
 class PictureForm(FlaskForm):
     # TODO fileAllowed, fileRequired
     image = FileField(label='')
-    update = SubmitField(label='Submit')
+    upload = SubmitField(label='Upload')
 
 class ChangePasswordForm(FlaskForm):
     old_password = PasswordField(label='Old Password', validators=[DataRequired()])
