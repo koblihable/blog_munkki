@@ -17,6 +17,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
 
+#TODO reporting
+
+
 def configure_routes(app):
     # routes
     @app.route('/')
@@ -341,7 +344,7 @@ def configure_routes(app):
         return render_template('user_detail_profile.html', user=user)
 
 
-    @app.route('/usr_settings/<int:user_id>', methods=['GET', 'POST'])
+    @app.route('/user_settings/<int:user_id>', methods=['GET', 'POST'])
     @login_required
     def user_settings(user_id):
         user = db.get_or_404(User, user_id)
@@ -357,11 +360,12 @@ def configure_routes(app):
             existing_user = db.session.execute(
                 db.select(User).where(User.email == user_form.email.data.lower())
             ).scalar_one_or_none()
+            print(existing_user)
 
             if existing_user and existing_user.id != user.id:
                 flash('This email address already exists', 'danger')
 
-                return redirect(url_for('usr_settings'))
+                return redirect(url_for('user_settings', user_id=user.id))
 
             user.first_name=user_form.first_name.data
             user.last_name=user_form.last_name.data
@@ -414,18 +418,20 @@ def configure_routes(app):
         )
 
 
-    @app.route('/usr_settings/<int:user_id>/remove_picture', methods=['POST'])
+    @app.route('/user_settings/<int:user_id>/remove_picture', methods=['POST'])
     def remove_picture(user_id):
         user = db.get_or_404(User, user_id)
 
         #TODO delete the orphaned files
-        '''filepath = os.path.join(
-    current_app.config["UPLOAD_FOLDER"],
-    user.profile_pic
-)
+        '''
+        filepath = os.path.join(
+            current_app.config["UPLOAD_FOLDER"],
+            user.profile_pic
+        )
 
-if os.path.exists(filepath):
-    os.remove(filepath)'''
+        if os.path.exists(filepath):
+            os.remove(filepath)
+        '''
         user.profile_pic = None
         db.session.commit()
 
@@ -437,7 +443,10 @@ if os.path.exists(filepath):
     @app.route('/usr_comments/<int:user_id>')
     def user_comments(user_id):
         user = db.get_or_404(User, user_id)
-        return render_template('user_detail_comments.html', user=user)
+        print(user)
+        for comment in user.comments:
+            print(comment.text)
+        return render_template('user_detail_comments.html', user=user, comments=user.comments)
 
     @app.route('/usr_posts/<int:user_id>')
     def user_posts(user_id):
