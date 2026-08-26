@@ -26,13 +26,13 @@
     <article class="mb-4">
         <div class="container px-4 px-lg-5">
 
-                            {% with messages = get_flashed_messages(with_categories=True) %}
+            {% with messages = get_flashed_messages(with_categories=True) %}
                     {% if messages %}
                         {% for category, message in messages %}
                             <div class="alert alert-{{ category }}">{{ message }}</div>
                         {% endfor %}
                     {% endif %}
-                {% endwith %}
+            {% endwith %}
 
             <div class="row gx-4 gx-lg-5 justify-content-center">
                 <div class="col-md-10 col-lg-8 col-xl-7">
@@ -54,14 +54,14 @@
 						<div class="be-comment">
 							<div class="be-img-comment">
 								<a href="#">
-									<img src="{{ url_for('static', filename='usr_images/') }}{{ comment.comment_author.profile_pic }}" alt="" class="be-ava-comment">
+									<img src="{{ url_for('static', filename='uploads/') }}{{ comment.comment_author.profile_pic }}" alt="" class="be-ava-comment">
 								</a>
 							</div>
 
 							<div class="be-comment-content">
 
 								<span class="be-comment-name">
-									<p class="comment-author-name">{{ comment.comment_author.first_name }} {{ comment.comment_author.last_name }} if {{ comment.comment_author }} else Deleted User</p>
+									<p class="comment-author-name">{{ comment.comment_author.first_name }} {{ comment.comment_author.last_name }}</p>
 								</span>
 								<span class="be-comment-time">
 									<i class="fa fa-clock-o"></i>

@@ -22,7 +22,7 @@ class BlogForm(FlaskForm):
     title = StringField(label='Title', validators=[DataRequired()])
     subtitle = StringField(label='Subtitle', validators=[DataRequired()])
     body = CKEditorField(label='Text', validators=[DataRequired()])
-    img_url = StringField(label='Image')
+    img_url = FileField(label='Image')
     submit = SubmitField(label='Post')
 
 # create/ update a user
